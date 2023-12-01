@@ -68,12 +68,22 @@ impl eframe::App for TemplateApp {
             // The central panel the region left after adding TopPanel's and SidePanel's
             ui.heading("I just changed this text");
 
-            let painter = ui.painter();
-            let circle_center = egui::pos2(800.0, 200.0);
+            let panel_size = ui.available_size();
+            let circle_center = egui::pos2(panel_size.x / 2.0, panel_size.y / 2.0);
+
             let circle_radius = 50.0;
             let circle_color = egui::Color32::BLUE;
 
+            let circle2_center = egui::pos2(circle_center.x + 250.0, circle_center.y);
+            let circle2_color = egui::Color32::RED;
+
+            let painter = ui.painter();
             painter.circle(circle_center, circle_radius, circle_color, (0.0, egui::Color32::TRANSPARENT));
+            painter.circle(circle2_center, circle_radius, circle2_color, (0.0, egui::Color32::TRANSPARENT));
+
+            let line_color = egui::Color32::WHITE;
+            let line_width = 2.0;
+            painter.line_segment([circle_center, circle2_center], (line_width, line_color));
         });
     }
 }
