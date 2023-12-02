@@ -1,5 +1,6 @@
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
+use egui::{Stroke, Color32};
 
 #[wasm_bindgen]
 extern "C" {
@@ -96,6 +97,7 @@ impl eframe::App for TemplateApp {
             ui.label(format!("Frame: {}", self.frame_counter));
             ui.allocate_space(egui::vec2(0.0, 0.0));
 
+            let painter = ui.painter();
 
             let panel_size = ui.available_size();
             let base_circle_center = egui::pos2(panel_size.x / 2.0, panel_size.y / 2.0);
@@ -116,20 +118,33 @@ impl eframe::App for TemplateApp {
 
 
             let circle_radius = 50.0;
-            let circle_color = egui::Color32::BLUE;
-
+            let circle_color = egui::Color32::WHITE;
+            let stroke_width = 2.0;
+            let stroke = egui::Stroke::new(stroke_width, circle_color);
             //let mut circle2_center = egui::pos2(circle_center.x + 250.0, circle_center.y);
 
-            let circle2_color = egui::Color32::RED;
+            //let circle2_color = egui::Color32::RED;
 
-            let painter = ui.painter();
-            painter.circle(circle_center, circle_radius, circle_color, (0.0, egui::Color32::TRANSPARENT));
-            painter.circle(circle2_center, circle_radius, circle2_color, (0.0, egui::Color32::TRANSPARENT));
+            painter.circle(circle_center, circle_radius, egui::Color32::TRANSPARENT, stroke);
+            painter.circle(circle2_center, circle_radius, egui::Color32::TRANSPARENT, stroke);
+
+
+
+            // getting the lines to only connect to outer circle edge
+            let direction = circle2_center - circle_center;
+            let norm_direction = direction.normalized();
+            let start_point = circle_center + norm_direction * circle_radius;
+            let end_point = circle2_center - norm_direction * circle_radius;
+
+
+
+
+
 
             let line_color = egui::Color32::WHITE;
             let line_width = 2.0;
-            painter.line_segment([circle_center, circle2_center], (line_width, line_color));
-
+            painter.line_segment([start_point, end_point], (line_width, line_color));
+            
             ctx.request_repaint();
         });
     }
