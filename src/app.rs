@@ -1,3 +1,19 @@
+use wasm_bindgen::prelude::*;
+use wasm_bindgen::JsCast;
+
+#[wasm_bindgen]
+extern "C" {
+    type Performance;
+    static performance: Performance;
+    #[wasm_bindgen(method)]
+    fn now(this: &Performance) -> f64;
+}
+
+fn get_current_time() -> f64 {
+    performance.now()
+}
+
+
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)] // if we add new fields, give them default values when deserializing old state
@@ -7,6 +23,8 @@ pub struct TemplateApp {
 
     #[serde(skip)] // This how you opt-out of serialization of a field
     value: f32,
+    #[serde(skip)]
+    frame_counter: u32,
 }
 
 impl Default for TemplateApp {
@@ -15,6 +33,7 @@ impl Default for TemplateApp {
             // Example stuff:
             label: "put a label here?".to_owned(),
             value: 2.9,
+            frame_counter: 0,
         }
     }
 }
@@ -45,6 +64,10 @@ impl eframe::App for TemplateApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         // Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
         // For inspiration and more examples, go to https://emilk.github.io/egui
+        
+        let current_time = get_current_time() / 1000.0;
+        self.frame_counter += 1;
+
 
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             // The top panel is often a good place for a menu bar:
@@ -68,13 +91,35 @@ impl eframe::App for TemplateApp {
             // The central panel the region left after adding TopPanel's and SidePanel's
             ui.heading("I just changed this text");
 
+            // Add an invisible label with a constantly changing text (like a frame counter)
+            // This can trick eframe into redrawing each frame
+            ui.label(format!("Frame: {}", self.frame_counter));
+            ui.allocate_space(egui::vec2(0.0, 0.0));
+
+
             let panel_size = ui.available_size();
-            let circle_center = egui::pos2(panel_size.x / 2.0, panel_size.y / 2.0);
+            let base_circle_center = egui::pos2(panel_size.x / 2.0, panel_size.y / 2.0);
+            //let mut circle_center = egui::pos2(panel_size.x / 2.0, panel_size.y / 2.0);
+
+            let node_id1: f32 = 1.0;
+            let node_id2: f32 = 2.0;
+
+            // Calculate the position offsets using sine and cosine with current time
+            let offset_x1 = (current_time as f32 + node_id1).sin() * 5.0; // Adjust multiplier for range
+            let offset_y1 = (current_time as f32 + node_id1).cos() * 5.0;
+            let offset_x2 = (current_time as f32 + node_id2).sin() * 5.0;
+            let offset_y2 = (current_time as f32 + node_id2).cos() * 5.0;
+
+            // Apply offsets to the base position
+            let circle_center = egui::pos2(base_circle_center.x + offset_x1, base_circle_center.y + offset_y1);
+            let circle2_center = egui::pos2(base_circle_center.x - 350.0 + offset_x2, base_circle_center.y + offset_y2);
+
 
             let circle_radius = 50.0;
             let circle_color = egui::Color32::BLUE;
 
-            let circle2_center = egui::pos2(circle_center.x + 250.0, circle_center.y);
+            //let mut circle2_center = egui::pos2(circle_center.x + 250.0, circle_center.y);
+
             let circle2_color = egui::Color32::RED;
 
             let painter = ui.painter();
@@ -84,6 +129,8 @@ impl eframe::App for TemplateApp {
             let line_color = egui::Color32::WHITE;
             let line_width = 2.0;
             painter.line_segment([circle_center, circle2_center], (line_width, line_color));
+
+            ctx.request_repaint();
         });
     }
 }
