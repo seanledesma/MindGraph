@@ -20,6 +20,7 @@ log = "0.4"
 serde = { version = "1", features = ["derive"] }
 egui_demo_lib = "0.23.0"
 wasm-bindgen = "0.2.89"
+petgraph = "0.6.4"
 
 # native:
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]

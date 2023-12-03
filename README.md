@@ -1,3 +1,33 @@
+My ultimate goal is to have a title for each circle, and a place for the user to enter text in the circle. Ultimately, the user decides which connections to add where, for example say they have a circle titled hobbies, and then from that circle they create other related circles like programming, guitar, painting, etc, and all those circles have related circles. My system needs a way to keep track of all the relations the user is creating, as well as keep track of all the titles and notes they are making in each circle, and possibly store those in a database of some kind.
+
+MVP features:
+- A graph thats starts very simple but gives the user the power to expand it.
+- Each circle (node) has 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # eframe template
 
 [![dependency status](https://deps.rs/repo/github/emilk/eframe_template/status.svg)](https://deps.rs/repo/github/emilk/eframe_template)

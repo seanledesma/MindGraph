@@ -1,7 +1,10 @@
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use egui::{Stroke, Color32};
+use petgraph::graph::UnGraph;
+use petgraph::graph::NodeIndex;
 
+// using the following to get current time using js
 #[wasm_bindgen]
 extern "C" {
     type Performance;
@@ -14,32 +17,148 @@ fn get_current_time() -> f64 {
     performance.now()
 }
 
+struct Circle {
+    position: egui::Pos2,
+    radius: f32,
+    //color: egui::Color32,
+    //stroke_width: f32,
+    //stroke: egui::Stroke,
 
-/// We derive Deserialize/Serialize so we can persist app state on shutdown.
+
+}
+type CircleGraph = UnGraph<Circle, ()>;
+
 #[derive(serde::Deserialize, serde::Serialize)]
-#[serde(default)] // if we add new fields, give them default values when deserializing old state
-pub struct TemplateApp {
-    // Example stuff:
-    label: String,
-
-    #[serde(skip)] // This how you opt-out of serialization of a field
-    value: f32,
-    #[serde(skip)]
+#[serde(default)]
+pub struct MindGraph {
     frame_counter: u32,
+    editor_text: String,
+    show_popup: bool,
+    
+
+    #[serde(skip)]
+    graph: CircleGraph,
+    #[serde(skip)]
+    central_node_index: NodeIndex,
+    #[serde(skip)]
+    orbit_radius: f32,
+
 }
 
-impl Default for TemplateApp {
+
+impl Default for MindGraph {
     fn default() -> Self {
-        Self {
-            // Example stuff:
-            label: "put a label here?".to_owned(),
-            value: 2.9,
-            frame_counter: 0,
+        let mut graph = CircleGraph::default();
+        let central_circle = Circle {
+            position: egui::pos2(200.0, 200.0),
+            radius: 20.0,
+            //color: egui::Color32::WHITE,
+            //stroke_width: 2.0,
+            //stroke: egui::Stroke::new(stroke_width, color),
+        };
+        let central_node_index = graph.add_node(central_circle);
+        Self{
+            frame_counter:0,
+            editor_text:String::new(),
+            show_popup:false,
+            graph,
+            central_node_index,
+            orbit_radius: 100.0,
+
         }
     }
 }
 
-impl TemplateApp {
+
+impl MindGraph {
+    pub fn add_node(&mut self) {
+        // determine the position for new node
+        let new_node_position = self.calculate_new_node_position();
+
+        // create a Circle 
+        let new_node = Circle {
+            position: new_node_position,
+            radius: 20.0,
+        };
+
+        // add the new node to the graph
+        let new_node_index = self.graph.add_node(new_node);
+
+        // create edge to central node
+        self.graph.add_edge(self.central_node_index, new_node_index, ());
+    }
+
+    fn calculate_new_node_position(&self) -> egui::Pos2{
+        // determine angle increment based on total num of nodes
+        let total_nodes = self.graph.node_count();
+        let angle_increment = 360.0 / total_nodes as f32;
+
+        // calculate the angle for the new node
+        let angle_degree = angle_increment * (total_nodes - 1) as f32;
+        let angle_rad = angle_degree.to_radians();
+
+        // calculate the position of the new node
+        let central_circle = &self.graph[self.central_node_index];
+        let new_x = central_circle.position.x + self.orbit_radius * angle_rad.cos();
+        let new_y = central_circle.position.y + self.orbit_radius * angle_rad.sin();
+
+
+        egui::pos2(new_x, new_y)
+    }
+}
+
+
+impl eframe::App for MindGraph {
+    /// Called by the frame work to save state before shutdown.
+    fn save(&mut self, storage: &mut dyn eframe::Storage) {
+        eframe::set_value(storage, eframe::APP_KEY, self);
+    }
+
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        let current_time = get_current_time() / 1000.0;
+
+
+        egui::CentralPanel::default().show(ctx, |ui| {
+            let painter = ui.painter();
+            let circle_color = egui::Color32::WHITE;
+            let stroke_width = 2.0;
+            let stroke = egui::Stroke::new(stroke_width, circle_color);
+           
+
+            for node_index in self.graph.node_indices() {
+                let circle = &self.graph[node_index];
+                painter.circle(circle.position, circle.radius,  egui::Color32::TRANSPARENT, stroke);
+
+            }
+
+
+
+
+
+        });
+
+
+
+
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// add this if you ever need UI customization, State Persistence, or Unique initialization logic
+impl MindGraph {
     /// Called once before the first frame.
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
         // This is also where you can customize the look and feel of egui using
@@ -54,99 +173,3 @@ impl TemplateApp {
         Default::default()
     }
 }
-
-impl eframe::App for TemplateApp {
-    /// Called by the frame work to save state before shutdown.
-    fn save(&mut self, storage: &mut dyn eframe::Storage) {
-        eframe::set_value(storage, eframe::APP_KEY, self);
-    }
-
-    /// Called each time the UI needs repainting, which may be many times per second.
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        // Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
-        // For inspiration and more examples, go to https://emilk.github.io/egui
-        
-        let current_time = get_current_time() / 1000.0;
-        self.frame_counter += 1;
-
-
-        egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
-            // The top panel is often a good place for a menu bar:
-
-            egui::menu::bar(ui, |ui| {
-                #[cfg(not(target_arch = "wasm32"))] // no File->Quit on web pages!
-                {
-                    ui.menu_button("File", |ui| {
-                        if ui.button("Quit").clicked() {
-                            _frame.close();
-                        }
-                    });
-                    ui.add_space(16.0);
-                }
-
-                egui::widgets::global_dark_light_mode_buttons(ui);
-            });
-        });
-
-        egui::CentralPanel::default().show(ctx, |ui| {
-            // The central panel the region left after adding TopPanel's and SidePanel's
-            ui.heading("I just changed this text");
-
-            // Add an invisible label with a constantly changing text (like a frame counter)
-            // This can trick eframe into redrawing each frame
-            ui.label(format!("Frame: {}", self.frame_counter));
-            ui.allocate_space(egui::vec2(0.0, 0.0));
-
-            let painter = ui.painter();
-
-            let panel_size = ui.available_size();
-            let base_circle_center = egui::pos2(panel_size.x / 2.0, panel_size.y / 2.0);
-            //let mut circle_center = egui::pos2(panel_size.x / 2.0, panel_size.y / 2.0);
-
-            let node_id1: f32 = 1.0;
-            let node_id2: f32 = 2.0;
-
-            // Calculate the position offsets using sine and cosine with current time
-            let offset_x1 = (current_time as f32 + node_id1).sin() * 5.0; // Adjust multiplier for range
-            let offset_y1 = (current_time as f32 + node_id1).cos() * 5.0;
-            let offset_x2 = (current_time as f32 + node_id2).sin() * 5.0;
-            let offset_y2 = (current_time as f32 + node_id2).cos() * 5.0;
-
-            // Apply offsets to the base position
-            let circle_center = egui::pos2(base_circle_center.x + offset_x1, base_circle_center.y + offset_y1);
-            let circle2_center = egui::pos2(base_circle_center.x - 350.0 + offset_x2, base_circle_center.y + offset_y2);
-
-
-            let circle_radius = 50.0;
-            let circle_color = egui::Color32::WHITE;
-            let stroke_width = 2.0;
-            let stroke = egui::Stroke::new(stroke_width, circle_color);
-            //let mut circle2_center = egui::pos2(circle_center.x + 250.0, circle_center.y);
-
-            //let circle2_color = egui::Color32::RED;
-
-            painter.circle(circle_center, circle_radius, egui::Color32::TRANSPARENT, stroke);
-            painter.circle(circle2_center, circle_radius, egui::Color32::TRANSPARENT, stroke);
-
-
-
-            // getting the lines to only connect to outer circle edge
-            let direction = circle2_center - circle_center;
-            let norm_direction = direction.normalized();
-            let start_point = circle_center + norm_direction * circle_radius;
-            let end_point = circle2_center - norm_direction * circle_radius;
-
-
-
-
-
-
-            let line_color = egui::Color32::WHITE;
-            let line_width = 2.0;
-            painter.line_segment([start_point, end_point], (line_width, line_color));
-            
-            ctx.request_repaint();
-        });
-    }
-}
-
