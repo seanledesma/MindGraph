@@ -3,6 +3,7 @@ use wasm_bindgen::JsCast;
 use egui::{Stroke, Color32};
 use petgraph::graph::UnGraph;
 use petgraph::graph::NodeIndex;
+use petgraph::visit::EdgeRef;
 
 // using the following to get current time using js
 #[wasm_bindgen]
@@ -73,11 +74,11 @@ impl Default for MindGraph {
 impl MindGraph {
     pub fn add_node(&mut self) {
         // determine the position for new node
-        let new_node_position = self.calculate_new_node_position();
+        //let new_node_position = self.recalculate_node_positions();
 
         // create a Circle 
         let new_node = Circle {
-            position: new_node_position,
+            position: egui::pos2(0.0, 0.0),
             radius: 20.0,
         };
 
@@ -86,25 +87,48 @@ impl MindGraph {
 
         // create edge to central node
         self.graph.add_edge(self.central_node_index, new_node_index, ());
+        
+        // Recalculate positions for all nodes
+        self.recalculate_node_positions();
     }
 
-    fn calculate_new_node_position(&self) -> egui::Pos2{
-        // determine angle increment based on total num of nodes
-        let total_nodes = self.graph.node_count();
+    fn recalculate_node_positions(&mut self) {
+        let total_nodes = self.graph.node_count() - 1; // Exclude central node
         let angle_increment = 360.0 / total_nodes as f32;
 
-        // calculate the angle for the new node
-        let angle_degree = angle_increment * (total_nodes - 1) as f32;
-        let angle_rad = angle_degree.to_radians();
+        for (i, node_index) in self.graph.node_indices().enumerate() {
+            // Skip the central node
+            if node_index != self.central_node_index {
+                let angle_degree = angle_increment * i as f32;
+                let angle_rad = angle_degree.to_radians();
 
-        // calculate the position of the new node
-        let central_circle = &self.graph[self.central_node_index];
-        let new_x = central_circle.position.x + self.orbit_radius * angle_rad.cos();
-        let new_y = central_circle.position.y + self.orbit_radius * angle_rad.sin();
+                let central_circle = &self.graph[self.central_node_index];
+                let new_x = central_circle.position.x + self.orbit_radius * angle_rad.cos();
+                let new_y = central_circle.position.y + self.orbit_radius * angle_rad.sin();
 
-
-        egui::pos2(new_x, new_y)
+                self.graph[node_index].position = egui::pos2(new_x, new_y);
+            }
+        }
     }
+
+
+    // fn calculate_new_node_position(&self) -> egui::Pos2{
+    //     // determine angle increment based on total num of nodes
+    //     let total_nodes = self.graph.node_count();
+    //     let angle_increment = 360.0 / total_nodes as f32;
+
+    //     // calculate the angle for the new node
+    //     let angle_degree = angle_increment * (total_nodes - 1) as f32;
+    //     let angle_rad = angle_degree.to_radians();
+
+    //     // calculate the position of the new node
+    //     let central_circle = &self.graph[self.central_node_index];
+    //     let new_x = central_circle.position.x + self.orbit_radius * angle_rad.cos();
+    //     let new_y = central_circle.position.y + self.orbit_radius * angle_rad.sin();
+
+
+    //     egui::pos2(new_x, new_y)
+    // }
 }
 
 
@@ -119,16 +143,29 @@ impl eframe::App for MindGraph {
 
 
         egui::CentralPanel::default().show(ctx, |ui| {
+            // Button to add a new circle
+            if ui.button("Add Circle").clicked() {
+                self.add_node(); // Method to add a new node
+            }
+            
             let painter = ui.painter();
             let circle_color = egui::Color32::WHITE;
             let stroke_width = 2.0;
             let stroke = egui::Stroke::new(stroke_width, circle_color);
-           
 
+            // Iterate over nodes to draw circles and lines
             for node_index in self.graph.node_indices() {
                 let circle = &self.graph[node_index];
-                painter.circle(circle.position, circle.radius,  egui::Color32::TRANSPARENT, stroke);
-
+                painter.circle(circle.position, circle.radius, egui::Color32::TRANSPARENT, stroke);
+                
+                // Draw connections to other nodes
+                for edge in self.graph.edges(node_index) {
+                    let target_node = &self.graph[edge.target()];
+                    painter.line_segment(
+                        [circle.position, target_node.position], 
+                        (2.0, egui::Color32::WHITE)
+                    );
+                }
             }
 
 
