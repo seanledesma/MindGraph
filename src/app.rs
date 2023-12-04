@@ -35,12 +35,15 @@ pub struct MindGraph {
     frame_counter: u32,
     editor_text: String,
     show_popup: bool,
+    central_circle_initialized: bool,
     
 
     #[serde(skip)]
     graph: CircleGraph,
     #[serde(skip)]
     central_node_index: NodeIndex,
+    #[serde(skip)]
+    original_central_node_index: NodeIndex,
     #[serde(skip)]
     orbit_radius: f32,
 
@@ -52,7 +55,7 @@ impl Default for MindGraph {
         let mut graph = CircleGraph::default();
         let central_circle = Circle {
             position: egui::pos2(200.0, 200.0),
-            radius: 20.0,
+            radius: 40.0,
             //color: egui::Color32::WHITE,
             //stroke_width: 2.0,
             //stroke: egui::Stroke::new(stroke_width, color),
@@ -63,8 +66,10 @@ impl Default for MindGraph {
             editor_text:String::new(),
             show_popup:false,
             graph,
-            central_node_index,
-            orbit_radius: 100.0,
+            central_node_index: central_node_index,// this is the same as the original on initialization, but will change later
+            original_central_node_index: central_node_index,
+            orbit_radius: 300.0,
+            central_circle_initialized: false,
 
         }
     }
@@ -79,7 +84,7 @@ impl MindGraph {
         // create a Circle 
         let new_node = Circle {
             position: egui::pos2(0.0, 0.0),
-            radius: 20.0,
+            radius: 40.0,
         };
 
         // add the new node to the graph
@@ -93,44 +98,81 @@ impl MindGraph {
     }
 
     fn recalculate_node_positions(&mut self) {
-        let total_nodes = self.graph.node_count() - 1; // Exclude central node
-        let angle_increment = 360.0 / total_nodes as f32;
-
+        let total_nodes = self.graph.node_count();
+        let angle_increment = 360.0 / (total_nodes - 1) as f32; // Adjust for excluding central node
+    
         for (i, node_index) in self.graph.node_indices().enumerate() {
             // Skip the central node
             if node_index != self.central_node_index {
                 let angle_degree = angle_increment * i as f32;
                 let angle_rad = angle_degree.to_radians();
-
+    
                 let central_circle = &self.graph[self.central_node_index];
                 let new_x = central_circle.position.x + self.orbit_radius * angle_rad.cos();
                 let new_y = central_circle.position.y + self.orbit_radius * angle_rad.sin();
-
+    
                 self.graph[node_index].position = egui::pos2(new_x, new_y);
             }
         }
     }
 
+    pub fn draw_graph(&self, ui: &egui::Ui, current_time: f64) {
+        let painter = ui.painter();
+        let circle_color = egui::Color32::WHITE;
+        let stroke_width = 2.0;
+        let stroke = egui::Stroke::new(stroke_width, circle_color);
 
-    // fn calculate_new_node_position(&self) -> egui::Pos2{
-    //     // determine angle increment based on total num of nodes
-    //     let total_nodes = self.graph.node_count();
-    //     let angle_increment = 360.0 / total_nodes as f32;
+        // Iterate over nodes to draw circles and lines
+        for node_index in self.graph.node_indices() {
+            let node_id = node_index.index() as f32;
+            let circle = &self.graph[node_index];
 
-    //     // calculate the angle for the new node
-    //     let angle_degree = angle_increment * (total_nodes - 1) as f32;
-    //     let angle_rad = angle_degree.to_radians();
+            // calculate circle center offsets to create floating effect
+            let offset_x = (current_time as f32 + node_id).sin() * 3.0;
+            let offset_y = (current_time as f32 + node_id).cos() * 3.0;
 
-    //     // calculate the position of the new node
-    //     let central_circle = &self.graph[self.central_node_index];
-    //     let new_x = central_circle.position.x + self.orbit_radius * angle_rad.cos();
-    //     let new_y = central_circle.position.y + self.orbit_radius * angle_rad.sin();
+            // apply offsets
+            let floating_position = egui::pos2(circle.position.x + offset_x, circle.position.y + offset_y);
 
 
-    //     egui::pos2(new_x, new_y)
-    // }
+            painter.circle(floating_position, circle.radius, egui::Color32::TRANSPARENT, stroke);
+            
+            // Draw connections to other nodes
+            for edge in self.graph.edges(node_index) {
+                let target_node = &self.graph[edge.target()];
+
+                // Calculate the floating position of the target node
+                let target_node_id = edge.target().index() as f32;
+                let target_offset_x = (current_time as f32 + target_node_id).sin() * 3.0;
+                let target_offset_y = (current_time as f32 + target_node_id).cos() * 3.0;
+                let target_floating_position = egui::pos2(target_node.position.x + target_offset_x, target_node.position.y + target_offset_y);
+    
+                // Calculate direction vectors for the floating positions
+                let direction = target_floating_position - floating_position;
+                let norm_direction = direction.normalized();
+
+                // Calculate start and end points on the circle edges for floating positions
+                let start_point = floating_position + norm_direction * circle.radius;
+                let end_point = target_floating_position - norm_direction * target_node.radius;
+
+                painter.line_segment(
+                    [start_point, end_point],
+                    (2.0, egui::Color32::WHITE)
+                );
+            }
+        }
+    }
 }
 
+impl MindGraph {
+    pub fn go_home_logic(&mut self) {
+        //TODO
+    }
+
+    fn go_home_ui() {
+        //TODO
+    }
+}
 
 impl eframe::App for MindGraph {
     /// Called by the frame work to save state before shutdown.
@@ -140,43 +182,42 @@ impl eframe::App for MindGraph {
 
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         let current_time = get_current_time() / 1000.0;
+        self.frame_counter += 1;
 
 
         egui::CentralPanel::default().show(ctx, |ui| {
+            // frame counter for debugging purposes
+            ui.label(format!("Frame: {}", self.frame_counter));
+            ui.allocate_space(egui::vec2(0.0, 0.0));
+
+            // make sure central circle is in center
+            let panel_size = ui.available_size();
+            let central_position = egui::pos2(panel_size.x / 2.0, panel_size.y / 2.0);
+            self.graph[self.central_node_index].position = central_position;
+            // might need the following if we ever change radius / orbit 
+            // self.recalculate_node_positions();
+    
             // Button to add a new circle
             if ui.button("Add Circle").clicked() {
                 self.add_node(); // Method to add a new node
+                self.draw_graph(ui, current_time); // Draw the graph after adding a node
+            } else {
+                // Regular drawing of the graph
+                self.draw_graph(ui, current_time);
             }
+
+
+
+
+
+
+
+
+
             
-            let painter = ui.painter();
-            let circle_color = egui::Color32::WHITE;
-            let stroke_width = 2.0;
-            let stroke = egui::Stroke::new(stroke_width, circle_color);
-
-            // Iterate over nodes to draw circles and lines
-            for node_index in self.graph.node_indices() {
-                let circle = &self.graph[node_index];
-                painter.circle(circle.position, circle.radius, egui::Color32::TRANSPARENT, stroke);
-                
-                // Draw connections to other nodes
-                for edge in self.graph.edges(node_index) {
-                    let target_node = &self.graph[edge.target()];
-                    painter.line_segment(
-                        [circle.position, target_node.position], 
-                        (2.0, egui::Color32::WHITE)
-                    );
-                }
-            }
-
-
-
-
-
+            // probably performance hog, but needed to keep circles floating
+            ctx.request_repaint();
         });
-
-
-
-
     }
 }
 
