@@ -6,7 +6,16 @@ MVP features:
 
 
 
+todo today (tuesday)
+- basic graph implementation: add node adds circle to original circle, then click on orbiting node centers that node.
+- newly centered node has one satellite, the original circle.
+- add node works for newly centered node, allowing user to click another node, and so on.
+- due to egui limitations, we can only paint one node and its immediate neighbors. 
+- stretch goal today: implement bfs to determine which node leads back to original node, paint it red.
 
+technical details:
+- use the graph data structure to get immediate neighbors.
+- current_node should be set when clicked, and then paint all it's neighbors, which should start out as one.
 
 
 

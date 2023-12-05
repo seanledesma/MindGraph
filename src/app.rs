@@ -41,7 +41,7 @@ pub struct MindGraph {
     #[serde(skip)]
     graph: CircleGraph,
     #[serde(skip)]
-    central_node_index: NodeIndex,
+    current_central_node_index: NodeIndex,
     #[serde(skip)]
     original_central_node_index: NodeIndex,
     #[serde(skip)]
@@ -66,7 +66,7 @@ impl Default for MindGraph {
             editor_text:String::new(),
             show_popup:false,
             graph,
-            central_node_index: central_node_index,// this is the same as the original on initialization, but will change later
+            current_central_node_index: central_node_index,// this is the same as the original on initialization, but will change later
             original_central_node_index: central_node_index,
             orbit_radius: 300.0,
             central_circle_initialized: false,
@@ -78,8 +78,6 @@ impl Default for MindGraph {
 
 impl MindGraph {
     pub fn add_node(&mut self) {
-        // determine the position for new node
-        //let new_node_position = self.recalculate_node_positions();
 
         // create a Circle 
         let new_node = Circle {
@@ -91,7 +89,7 @@ impl MindGraph {
         let new_node_index = self.graph.add_node(new_node);
 
         // create edge to central node
-        self.graph.add_edge(self.central_node_index, new_node_index, ());
+        self.graph.add_edge(self.current_central_node_index, new_node_index, ());
         
         // Recalculate positions for all nodes
         self.recalculate_node_positions();
@@ -103,17 +101,24 @@ impl MindGraph {
     
         for (i, node_index) in self.graph.node_indices().enumerate() {
             // Skip the central node
-            if node_index != self.central_node_index {
+            if node_index != self.current_central_node_index {
                 let angle_degree = angle_increment * i as f32;
                 let angle_rad = angle_degree.to_radians();
     
-                let central_circle = &self.graph[self.central_node_index];
+                let central_circle = &self.graph[self.current_central_node_index];
                 let new_x = central_circle.position.x + self.orbit_radius * angle_rad.cos();
                 let new_y = central_circle.position.y + self.orbit_radius * angle_rad.sin();
     
                 self.graph[node_index].position = egui::pos2(new_x, new_y);
             }
         }
+    }
+
+
+    pub fn set_new_central_node(&mut self, new_central_node_index: NodeIndex) {
+    
+        self.current_central_node_index = new_central_node_index;
+        self.recalculate_node_positions();
     }
 
     pub fn draw_graph(&self, ui: &egui::Ui, current_time: f64) {
@@ -127,33 +132,17 @@ impl MindGraph {
             let node_id = node_index.index() as f32;
             let circle = &self.graph[node_index];
 
-            // calculate circle center offsets to create floating effect
-            let offset_x = (current_time as f32 + node_id).sin() * 3.0;
-            let offset_y = (current_time as f32 + node_id).cos() * 3.0;
-
-            // apply offsets
-            let floating_position = egui::pos2(circle.position.x + offset_x, circle.position.y + offset_y);
 
 
-            painter.circle(floating_position, circle.radius, egui::Color32::TRANSPARENT, stroke);
+            painter.circle(circle.position, circle.radius, egui::Color32::TRANSPARENT, stroke);
             
             // Draw connections to other nodes
             for edge in self.graph.edges(node_index) {
                 let target_node = &self.graph[edge.target()];
 
-                // Calculate the floating position of the target node
-                let target_node_id = edge.target().index() as f32;
-                let target_offset_x = (current_time as f32 + target_node_id).sin() * 3.0;
-                let target_offset_y = (current_time as f32 + target_node_id).cos() * 3.0;
-                let target_floating_position = egui::pos2(target_node.position.x + target_offset_x, target_node.position.y + target_offset_y);
-    
-                // Calculate direction vectors for the floating positions
-                let direction = target_floating_position - floating_position;
-                let norm_direction = direction.normalized();
-
                 // Calculate start and end points on the circle edges for floating positions
-                let start_point = floating_position + norm_direction * circle.radius;
-                let end_point = target_floating_position - norm_direction * target_node.radius;
+                let start_point = circle.position;
+                let end_point = target_node.position;
 
                 painter.line_segment(
                     [start_point, end_point],
@@ -193,7 +182,7 @@ impl eframe::App for MindGraph {
             // make sure central circle is in center
             let panel_size = ui.available_size();
             let central_position = egui::pos2(panel_size.x / 2.0, panel_size.y / 2.0);
-            self.graph[self.central_node_index].position = central_position;
+            self.graph[self.current_central_node_index].position = central_position;
             // might need the following if we ever change radius / orbit 
             // self.recalculate_node_positions();
     
@@ -209,7 +198,21 @@ impl eframe::App for MindGraph {
 
 
 
-
+            // Check for mouse click
+            ctx.input(|input| {
+                if input.pointer.any_pressed() {
+                    if let Some(pointer_pos) = input.pointer.interact_pos() {
+                        for node_index in self.graph.node_indices() {
+                            let node = &self.graph[node_index];
+                            let distance = node.position.distance(pointer_pos);
+                            if distance < node.radius {
+                                self.set_new_central_node(node_index);
+                                break;
+                            }
+                        }
+                    }
+                }
+            });
 
 
 
@@ -220,8 +223,6 @@ impl eframe::App for MindGraph {
         });
     }
 }
-
-
 
 
 
