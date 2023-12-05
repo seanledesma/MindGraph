@@ -1,3 +1,4 @@
+use egui::Pos2;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use egui::{Stroke, Color32};
@@ -96,60 +97,105 @@ impl MindGraph {
     }
 
     fn recalculate_node_positions(&mut self) {
-        let total_nodes = self.graph.node_count();
-        let angle_increment = 360.0 / (total_nodes - 1) as f32; // Adjust for excluding central node
-    
-        for (i, node_index) in self.graph.node_indices().enumerate() {
-            // Skip the central node
-            if node_index != self.current_central_node_index {
-                let angle_degree = angle_increment * i as f32;
-                let angle_rad = angle_degree.to_radians();
-    
-                let central_circle = &self.graph[self.current_central_node_index];
-                let new_x = central_circle.position.x + self.orbit_radius * angle_rad.cos();
-                let new_y = central_circle.position.y + self.orbit_radius * angle_rad.sin();
-    
-                self.graph[node_index].position = egui::pos2(new_x, new_y);
-            }
+        
+
+        // Collect the indices of the neighboring nodes
+        let neighbors: Vec<NodeIndex> = self.graph.neighbors(self.current_central_node_index).collect();
+
+        let neighbor_count = neighbors.len();
+        let angle_increment = 360.0 / neighbor_count as f32;
+
+        // Now iterate over the collected indices
+        for (i, node_index) in neighbors.into_iter().enumerate() {
+            let angle_degree = angle_increment * i as f32;
+            let angle_rad = angle_degree.to_radians();
+
+            let central_circle = &self.graph[self.current_central_node_index];
+            let new_x = central_circle.position.x + self.orbit_radius * angle_rad.cos();
+            let new_y = central_circle.position.y + self.orbit_radius * angle_rad.sin();
+
+            // Now it's safe to mutate the graph since we're not iterating over it directly
+            self.graph[node_index].position = egui::pos2(new_x, new_y);
         }
+
+
+
+
+
+        // for (i, node_index) in self.graph.node_indices().enumerate() {
+        //     // Skip the central node
+        //     if node_index != self.current_central_node_index {
+        //         let angle_degree = angle_increment * i as f32;
+        //         let angle_rad = angle_degree.to_radians();
+    
+        //         let central_circle = &self.graph[self.current_central_node_index];
+        //         let new_x = central_circle.position.x + self.orbit_radius * angle_rad.cos();
+        //         let new_y = central_circle.position.y + self.orbit_radius * angle_rad.sin();
+    
+        //         self.graph[node_index].position = egui::pos2(new_x, new_y);
+        //     }
+        // }
     }
 
 
     pub fn set_new_central_node(&mut self, new_central_node_index: NodeIndex) {
-    
+        //self.recalculate_node_positions();
+
         self.current_central_node_index = new_central_node_index;
         self.recalculate_node_positions();
     }
 
-    pub fn draw_graph(&self, ui: &egui::Ui, current_time: f64) {
+    pub fn draw_graph(&mut self, ui: &egui::Ui, current_time: f64) {
         let painter = ui.painter();
         let circle_color = egui::Color32::WHITE;
         let stroke_width = 2.0;
         let stroke = egui::Stroke::new(stroke_width, circle_color);
 
+        let current_central_circle = &self.graph[self.current_central_node_index];
+        painter.circle(current_central_circle.position, current_central_circle.radius, egui::Color32::TRANSPARENT, stroke);
+
+        //let current_circle_position = self.current_central_node_index;
+
         // Iterate over nodes to draw circles and lines
-        for node_index in self.graph.node_indices() {
+        for node_index in self.graph.neighbors(self.current_central_node_index) {
             let node_id = node_index.index() as f32;
             let circle = &self.graph[node_index];
 
+            // get the position of the current central node to use in the for loop
+            let mut central_node_position = egui::pos2(0.0, 0.0);
+            if let Some(temp_central_node_data) = self.graph.node_weight(self.current_central_node_index) {
+                // Access the position of the central node
+                central_node_position = temp_central_node_data.position;
+                //println!("Central node position: {:?}", central_node_position);
+            }
 
-
-            painter.circle(circle.position, circle.radius, egui::Color32::TRANSPARENT, stroke);
             
             // Draw connections to other nodes
-            for edge in self.graph.edges(node_index) {
+            for edge in self.graph.edges(self.current_central_node_index) {
+
+
                 let target_node = &self.graph[edge.target()];
 
                 // Calculate start and end points on the circle edges for floating positions
-                let start_point = circle.position;
+                let start_point = central_node_position; // trying to get position of central node
                 let end_point = target_node.position;
+
+                //self.recalculate_node_positions();
 
                 painter.line_segment(
                     [start_point, end_point],
                     (2.0, egui::Color32::WHITE)
                 );
             }
+
+
+            painter.circle(circle.position, circle.radius, egui::Color32::TRANSPARENT, stroke);
+
+            
         }
+        self.recalculate_node_positions();
+
+        
     }
 }
 
