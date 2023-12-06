@@ -92,20 +92,20 @@ impl MindGraph {
         // create edge to central node
         self.graph.add_edge(self.current_central_node_index, new_node_index, ());
         
-        // Recalculate positions for all nodes
+        // recalculate positions for all nodes
         self.recalculate_node_positions();
     }
 
     fn recalculate_node_positions(&mut self) {
         
 
-        // Collect the indices of the neighboring nodes
+        // collect the indices of the neighboring nodes
         let neighbors: Vec<NodeIndex> = self.graph.neighbors(self.current_central_node_index).collect();
 
         let neighbor_count = neighbors.len();
         let angle_increment = 360.0 / neighbor_count as f32;
 
-        // Now iterate over the collected indices
+        //  iterate over the collected indices
         for (i, node_index) in neighbors.into_iter().enumerate() {
             let angle_degree = angle_increment * i as f32;
             let angle_rad = angle_degree.to_radians();
@@ -114,27 +114,11 @@ impl MindGraph {
             let new_x = central_circle.position.x + self.orbit_radius * angle_rad.cos();
             let new_y = central_circle.position.y + self.orbit_radius * angle_rad.sin();
 
-            // Now it's safe to mutate the graph since we're not iterating over it directly
             self.graph[node_index].position = egui::pos2(new_x, new_y);
         }
 
 
 
-
-
-        // for (i, node_index) in self.graph.node_indices().enumerate() {
-        //     // Skip the central node
-        //     if node_index != self.current_central_node_index {
-        //         let angle_degree = angle_increment * i as f32;
-        //         let angle_rad = angle_degree.to_radians();
-    
-        //         let central_circle = &self.graph[self.current_central_node_index];
-        //         let new_x = central_circle.position.x + self.orbit_radius * angle_rad.cos();
-        //         let new_y = central_circle.position.y + self.orbit_radius * angle_rad.sin();
-    
-        //         self.graph[node_index].position = egui::pos2(new_x, new_y);
-        //     }
-        // }
     }
 
 
@@ -156,7 +140,7 @@ impl MindGraph {
 
         //let current_circle_position = self.current_central_node_index;
 
-        // Iterate over nodes to draw circles and lines
+        // iterate over nodes to draw circles and lines
         for node_index in self.graph.neighbors(self.current_central_node_index) {
             let node_id = node_index.index() as f32;
             let circle = &self.graph[node_index];
@@ -164,20 +148,19 @@ impl MindGraph {
             // get the position of the current central node to use in the for loop
             let mut central_node_position = egui::pos2(0.0, 0.0);
             if let Some(temp_central_node_data) = self.graph.node_weight(self.current_central_node_index) {
-                // Access the position of the central node
+
                 central_node_position = temp_central_node_data.position;
                 //println!("Central node position: {:?}", central_node_position);
             }
 
             
-            // Draw connections to other nodes
+            // draw connections to other nodes
             for edge in self.graph.edges(self.current_central_node_index) {
 
 
                 let target_node = &self.graph[edge.target()];
 
-                // Calculate start and end points on the circle edges for floating positions
-                let start_point = central_node_position; // trying to get position of central node
+                let start_point = central_node_position; 
                 let end_point = target_node.position;
 
                 //self.recalculate_node_positions();
@@ -232,19 +215,19 @@ impl eframe::App for MindGraph {
             // might need the following if we ever change radius / orbit 
             // self.recalculate_node_positions();
     
-            // Button to add a new circle
+            // button to add a new circle
             if ui.button("Add Circle").clicked() {
-                self.add_node(); // Method to add a new node
-                self.draw_graph(ui, current_time); // Draw the graph after adding a node
+                self.add_node(); 
+                self.draw_graph(ui, current_time); 
             } else {
-                // Regular drawing of the graph
+                // regular drawing of the graph
                 self.draw_graph(ui, current_time);
             }
 
 
 
 
-            // Check for mouse click
+            // check for mouse click
             ctx.input(|input| {
                 if input.pointer.any_pressed() {
                     if let Some(pointer_pos) = input.pointer.interact_pos() {

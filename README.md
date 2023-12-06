@@ -1,115 +1,25 @@
-My ultimate goal is to have a title for each circle, and a place for the user to enter text in the circle. Ultimately, the user decides which connections to add where, for example say they have a circle titled hobbies, and then from that circle they create other related circles like programming, guitar, painting, etc, and all those circles have related circles. My system needs a way to keep track of all the relations the user is creating, as well as keep track of all the titles and notes they are making in each circle, and possibly store those in a database of some kind.
+# MindGraph
 
-MVP features:
-- A graph thats starts very simple but gives the user the power to expand it.
-- Each circle (node) has 
+    MindGraph is a way to map out your thoughts. 
 
+    Have you ever experienced the need to document a pivotal idea, only to realize you lack the proper place to record it? Or maybe you found yourself deeply engrossed in contemplation, arriving at a significant insight, but were unable to recall the path that led you there? Often, our most critical thoughts emerge when we delve deeply into complex subjects, and it can be challenging to capture these insights effectively without understanding the context that guided you to them.
 
+    MindGraph is designed to address this challenge. Utilizing egui, an immediate mode graphical user interface, MindGraph places you at a single node, providing a foundation from which to organize your thoughts. You have the freedom to structure your ideas as you see fit. For instance, you might begin by creating a node labeled 'Hobbies.' From this starting point, the possibilities are endless. You can expand by adding related nodes, such as 'Programming,' and attach specific notes to these nodes. Further branching out, you could create additional nodes named 'C++', 'Rust', 'Python,' each accompanied by its unique set of notes, allowing for a comprehensive and structured exploration of your ideas.
 
-todo today (tuesday)
-- basic graph implementation: add node adds circle to original circle, then click on orbiting node centers that node.
-- newly centered node has one satellite, the original circle.
-- add node works for newly centered node, allowing user to click another node, and so on.
-- due to egui limitations, we can only paint one node and its immediate neighbors. 
-- stretch goal today: implement bfs to determine which node leads back to original node, paint it red.
+    MindGraph's primary objective is to offer a user-friendly interface for adding and selecting nodes with ease. Users can click to select a node, assign it a title, and access notes associated with that node. Navigating the graph swiftly and intuitively is a key aspect of the design. Additionally, the interface includes straightforward mechanisms to return to either the previous node or the home node, ensuring seamless navigation.
+    
+    Stretch goals include: having the option to see the entire map of the graph made so far, and showing more than a nodes immediate neighbors.
 
-technical details:
-- use the graph data structure to get immediate neighbors.
-- current_node should be set when clicked, and then paint all it's neighbors, which should start out as one.
+    To date, significant progress has been made on MindGraph's development. Key functionalities implemented include the capability to render a central circle on the screen, add nodes to the graph that are visually represented, and draw edges to connect these nodes. Additionally, I have enabled a feature that allows users to interactively select a node by clicking on it, which then becomes the central focus of the interface. This interactive functionality further extends to adding more nodes to the selected central node.
+
+    Currently, navigation can be somewhat confusing, as there are no explicit markers to indicate the origin node from which a user has transitioned. Additionally, there are no options for adding titles or notes to nodes, nor does it provide a direct option to return to the initial or 'home' node. 
 
 
+# Getting Started
+    Currently using Trunk to build for web target.
 
+    1. Install the required target with rustup target add wasm32-unknown-unknown.
+    2. Install Trunk with ```cargo install --locked trunk```.
+    3. Run trunk serve to build and serve on http://127.0.0.1:8080. Trunk will rebuild automatically if you edit the project.
+    4. Open http://127.0.0.1:8080/index.html#dev in a browser.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# eframe template
-
-[![dependency status](https://deps.rs/repo/github/emilk/eframe_template/status.svg)](https://deps.rs/repo/github/emilk/eframe_template)
-[![Build Status](https://github.com/emilk/eframe_template/workflows/CI/badge.svg)](https://github.com/emilk/eframe_template/actions?workflow=CI)
-
-This is a template repo for [eframe](https://github.com/emilk/egui/tree/master/crates/eframe), a framework for writing apps using [egui](https://github.com/emilk/egui/).
-
-The goal is for this to be the simplest way to get started writing a GUI app in Rust.
-
-You can compile your app natively or for the web, and share it using Github Pages.
-
-## Getting started
-
-Start by clicking "Use this template" at https://github.com/emilk/eframe_template/ or follow [these instructions](https://docs.github.com/en/free-pro-team@latest/github/creating-cloning-and-archiving-repositories/creating-a-repository-from-a-template).
-
-Change the name of the crate: Chose a good name for your project, and change the name to it in:
-* `Cargo.toml`
-    * Change the `package.name` from `eframe_template` to `your_crate`.
-    * Change the `package.authors`
-* `main.rs`
-    * Change `eframe_template::TemplateApp` to `your_crate::TemplateApp`
-* `index.html`
-    * Change the `<title>eframe template</title>` to `<title>your_crate</title>`. optional.
-* `assets/sw.js`
-  * Change the `'./eframe_template.js'` to `./your_crate.js` (in `filesToCache` array)
-  * Change the `'./eframe_template_bg.wasm'` to `./your_crate_bg.wasm` (in `filesToCache` array)
-
-### Learning about egui
-
-`src/app.rs` contains a simple example app. This is just to give some inspiration - most of it can be removed if you like.
-
-The official egui docs are at <https://docs.rs/egui>. If you prefer watching a video introduction, check out <https://www.youtube.com/watch?v=NtUkr_z7l84>. For inspiration, check out the [the egui web demo](https://emilk.github.io/egui/index.html) and follow the links in it to its source code.
-
-### Testing locally
-
-Make sure you are using the latest version of stable rust by running `rustup update`.
-
-`cargo run --release`
-
-On Linux you need to first run:
-
-`sudo apt-get install libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev libssl-dev`
-
-On Fedora Rawhide you need to run:
-
-`dnf install clang clang-devel clang-tools-extra libxkbcommon-devel pkg-config openssl-devel libxcb-devel gtk3-devel atk fontconfig-devel`
-
-### Web Locally
-
-You can compile your app to [WASM](https://en.wikipedia.org/wiki/WebAssembly) and publish it as a web page.
-
-We use [Trunk](https://trunkrs.dev/) to build for web target.
-1. Install the required target with `rustup target add wasm32-unknown-unknown`.
-2. Install Trunk with `cargo install --locked trunk`.
-3. Run `trunk serve` to build and serve on `http://127.0.0.1:8080`. Trunk will rebuild automatically if you edit the project.
-4. Open `http://localhost:8080/index.html#dev` in a browser. See the warning below.
-
-> `assets/sw.js` script will try to cache our app, and loads the cached version when it cannot connect to server allowing your app to work offline (like PWA).
-> appending `#dev` to `index.html` will skip this caching, allowing us to load the latest builds during development.
-
-### Web Deploy
-1. Just run `trunk build --release`.
-2. It will generate a `dist` directory as a "static html" website
-3. Upload the `dist` directory to any of the numerous free hosting websites including [GitHub Pages](https://docs.github.com/en/free-pro-team@latest/github/working-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site).
-4. we already provide a workflow that auto-deploys our app to GitHub pages if you enable it.
-> To enable Github Pages, you need to go to Repository -> Settings -> Pages -> Source -> set to `gh-pages` branch and `/` (root).
->
-> If `gh-pages` is not available in `Source`, just create and push a branch called `gh-pages` and it should be available.
-
-You can test the template app at <https://emilk.github.io/eframe_template/>.
-
-## Updating egui
-
-As of 2023, egui is in active development with frequent releases with breaking changes. [eframe_template](https://github.com/emilk/eframe_template/) will be updated in lock-step to always use the latest version of egui.
-
-When updating `egui` and `eframe` it is recommended you do so one version at the time, and read about the changes in [the egui changelog](https://github.com/emilk/egui/blob/master/CHANGELOG.md) and [eframe changelog](https://github.com/emilk/egui/blob/master/crates/eframe/CHANGELOG.md).

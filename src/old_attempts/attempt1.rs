@@ -80,14 +80,13 @@ impl Default for MindGraph {
 
 impl MindGraph {
     pub fn add_node(&mut self, orbit_center_index: NodeIndex) {
-        // Determine the orbit_radius for this new node
-        // You may want to set a specific radius or calculate it based on certain criteria
+        // determine the orbit_radius for this new node
         let orbit_radius = self.calculate_orbit_radius_for_new_node(orbit_center_index);
 
         // Create a Circle
         let new_node = Circle {
             position: egui::pos2(0.0, 0.0), // Initial position, will be set in recalculate_node_positions
-            radius: 20.0, // Example radius for the new node
+            radius: 20.0, 
             orbit_radius,
             scale: 1.0, // Normal scale
             orbit_center: Some(orbit_center_index),
@@ -102,7 +101,6 @@ impl MindGraph {
     }
 
     fn calculate_orbit_radius_for_new_node(&self, orbit_center_index: NodeIndex) -> f32 {
-        // Example calculation - you can adjust this logic as needed
         if orbit_center_index == self.original_central_node_index {
             100.0 // Default radius for nodes around the original central node
         } else {
@@ -117,9 +115,9 @@ impl MindGraph {
             .collect();
 
         // Define orbit radius values for focused and non-focused nodes
-        let focused_orbit_radius = 150.0; // Example larger radius for new focus
-        let neighbor_orbit_radius = 100.0; // Example radius for neighbors
-        let other_orbit_radius = 50.0; // Smaller radius for other nodes
+        let focused_orbit_radius = 150.0; 
+        let neighbor_orbit_radius = 100.0; 
+        let other_orbit_radius = 50.0; 
 
         // Now, iterate over all nodes to update their properties
         for node_index in self.graph.node_indices() {
@@ -163,7 +161,6 @@ impl MindGraph {
                 // Update the node's position
                 self.graph[node_index].position = egui::pos2(new_x, new_y);
             }
-            // For nodes without an orbit center, you might want to set a default position or skip
         }
     }
 
@@ -186,8 +183,8 @@ impl MindGraph {
     pub fn set_new_central_node(&mut self, new_central_node_index: NodeIndex) {
         // Update the orbit_center for the new central node
         if let Some(node) = self.graph.node_weight_mut(new_central_node_index) {
-            node.orbit_center = None; // Central node does not orbit around any other node
-            node.orbit_radius = 300.0; // Example larger radius for the new central node
+            node.orbit_center = None; 
+            node.orbit_radius = 300.0; 
         }
     
         self.central_node_index = new_central_node_index;
@@ -224,8 +221,6 @@ impl MindGraph {
 
     // Function to determine color based on distance
     fn color_for_distance(&self, distance: usize) -> Color32 {
-        // Example: Different shades based on distance
-        // Adjust the logic here to choose colors as you see fit
         match distance {
             0 => Color32::GOLD, // Original node
             1 => Color32::GREEN,
@@ -325,7 +320,6 @@ impl eframe::App for MindGraph {
                     // If there is a focused node, add the new node around it
                     self.add_node(focused_index);
                 } else {
-                    // If there is no focused node, add the new node around the original central node
                     self.add_node(self.original_central_node_index);
                 }
                 self.draw_graph(ui, current_time); // Draw the graph after adding a node
