@@ -2,6 +2,9 @@
 
 MindGraph is a way to map out your thoughts. 
 
+![mindgraph-1](https://github.com/seanledesma/MindGraph/assets/87875153/aa49baa9-bd68-4244-8c46-77ce103ed8a1)
+
+
 Have you ever experienced the need to document a pivotal idea, only to realize you lack the proper place to record it? Or maybe you found yourself deeply engrossed in contemplation, arriving at a significant insight, but were unable to recall the path that led you there? Often, our most critical thoughts emerge when we delve deeply into complex subjects, and it can be challenging to capture these insights effectively without understanding the context that guided you to them.
 
 MindGraph is designed to address this challenge. Utilizing egui, an immediate mode graphical user interface, MindGraph places you at a single node, providing a foundation from which to organize your thoughts. You have the freedom to structure your ideas as you see fit. For instance, you might begin by creating a node labeled 'Hobbies.' From this starting point, the possibilities are endless. You can expand by adding related nodes, such as 'Programming,' and attach specific notes to these nodes. Further branching out, you could create additional nodes named 'C++', 'Rust', 'Python,' each accompanied by its unique set of notes, allowing for a comprehensive and structured exploration of your ideas.
