@@ -22,11 +22,7 @@ fn get_current_time() -> f64 {
 struct Circle {
     position: egui::Pos2,
     radius: f32,
-    //color: egui::Color32,
-    //stroke_width: f32,
-    //stroke: egui::Stroke,
-
-
+    title: String,
 }
 type CircleGraph = UnGraph<Circle, ()>;
 
@@ -57,6 +53,7 @@ impl Default for MindGraph {
         let central_circle = Circle {
             position: egui::pos2(200.0, 200.0),
             radius: 40.0,
+            title: "".to_string(),
             //color: egui::Color32::WHITE,
             //stroke_width: 2.0,
             //stroke: egui::Stroke::new(stroke_width, color),
@@ -84,6 +81,7 @@ impl MindGraph {
         let new_node = Circle {
             position: egui::pos2(0.0, 0.0),
             radius: 40.0,
+            title: "".to_string(),
         };
 
         // add the new node to the graph
@@ -97,17 +95,17 @@ impl MindGraph {
     }
 
     fn recalculate_node_positions(&mut self) {
-        
-
         // collect the indices of the neighboring nodes
         let neighbors: Vec<NodeIndex> = self.graph.neighbors(self.current_central_node_index).collect();
 
         let neighbor_count = neighbors.len();
         let angle_increment = 360.0 / neighbor_count as f32;
+        // new circles automatically added to the right, this allows you to change that
+        let start_angle = 0.0;
 
-        //  iterate over the collected indices
+        //  iterate over the indices
         for (i, node_index) in neighbors.into_iter().enumerate() {
-            let angle_degree = angle_increment * i as f32;
+            let angle_degree = start_angle + angle_increment * i as f32;
             let angle_rad = angle_degree.to_radians();
 
             let central_circle = &self.graph[self.current_central_node_index];
@@ -116,9 +114,6 @@ impl MindGraph {
 
             self.graph[node_index].position = egui::pos2(new_x, new_y);
         }
-
-
-
     }
 
 
@@ -129,7 +124,7 @@ impl MindGraph {
         self.recalculate_node_positions();
     }
 
-    pub fn draw_graph(&mut self, ui: &egui::Ui, current_time: f64) {
+    pub fn draw_graph(&mut self, ui: &mut egui::Ui, current_time: f64) {
         let painter = ui.painter();
         let circle_color = egui::Color32::WHITE;
         let stroke_width = 2.0;
@@ -138,22 +133,45 @@ impl MindGraph {
         let current_central_circle = &self.graph[self.current_central_node_index];
         painter.circle(current_central_circle.position, current_central_circle.radius, egui::Color32::TRANSPARENT, stroke);
 
-        //let current_circle_position = self.current_central_node_index;
+
+        // get the position of the current central node to use in the for loop
+        let mut central_node_position = egui::pos2(0.0, 0.0);
+        let mut central_node_title = "".to_string();
+
+        let neighbor_indices: Vec<_> = self.graph.neighbors(self.current_central_node_index).collect();
 
         // iterate over nodes to draw circles and lines
-        for node_index in self.graph.neighbors(self.current_central_node_index) {
-            let node_id = node_index.index() as f32;
-            let circle = &self.graph[node_index];
+        for node_index in neighbor_indices {
 
-            // get the position of the current central node to use in the for loop
-            let mut central_node_position = egui::pos2(0.0, 0.0);
+            let neighbor_node = &self.graph[node_index];
+
+            painter.circle(neighbor_node.position, neighbor_node.radius, egui::Color32::TRANSPARENT, stroke);
+            //self.draw_text_boxes(ui);
+            
+
             if let Some(temp_central_node_data) = self.graph.node_weight(self.current_central_node_index) {
 
                 central_node_position = temp_central_node_data.position;
-                //println!("Central node position: {:?}", central_node_position);
-            }
+                central_node_title = temp_central_node_data.title.clone();
+            }            
 
-            
+                // Define the area for the text input field
+            let text_field_rect = egui::Rect::from_min_size(
+                egui::pos2(
+                    neighbor_node.position.x - neighbor_node.radius,
+                    neighbor_node.position.y - neighbor_node.radius - 20.0,
+                ),
+                egui::vec2(100.0, 20.0),
+            );
+
+            // ui.allocate_ui_at_rect(text_field_rect, |ui| {
+            //     ui.text_edit_singleline(&mut neighbor_node.title);
+            // });
+
+
+
+
+
             // draw connections to other nodes
             for edge in self.graph.edges(self.current_central_node_index) {
 
@@ -170,17 +188,63 @@ impl MindGraph {
                     (2.0, egui::Color32::WHITE)
                 );
             }
-
-
-            painter.circle(circle.position, circle.radius, egui::Color32::TRANSPARENT, stroke);
-
-            
         }
         self.recalculate_node_positions();
-
         
     }
+    pub fn draw_text_boxes(&mut self, ui: &mut egui::Ui) {
+
+        let central_node = &mut self.graph[self.current_central_node_index];
+    
+        // Define the area for the text input field
+        let text_field_rect = egui::Rect::from_min_size(
+            egui::pos2(
+                central_node.position.x - central_node.radius,
+                central_node.position.y - central_node.radius - 20.0,
+            ),
+            egui::vec2(100.0, 20.0),
+        );
+
+        ui.allocate_ui_at_rect(text_field_rect, |ui| {
+            ui.text_edit_singleline(&mut central_node.title);
+        });
+        
+        // Collect indices first to avoid borrowing issues
+        let neighbor_indices: Vec<_> = self.graph.neighbors(self.current_central_node_index).collect();
+    
+        for node_index in neighbor_indices {
+            // Now, borrow the node mutably
+            let neighbor_node = &mut self.graph[node_index];
+    
+            // Define the area for the text input field
+            let text_field_rect = egui::Rect::from_min_size(
+                egui::pos2(
+                    neighbor_node.position.x - neighbor_node.radius,
+                    neighbor_node.position.y - neighbor_node.radius - 20.0,
+                ),
+                egui::vec2(100.0, 20.0),
+            );
+    
+            ui.allocate_ui_at_rect(text_field_rect, |ui| {
+                ui.text_edit_singleline(&mut neighbor_node.title);
+            });
+        }
+    }
+    
 }
+            // let text = "hello there";
+            // let text_color = egui::Color32::WHITE;
+            // let font_size = 20.0;
+            // let font_id = egui::FontId::new(font_size, egui::FontFamily::Proportional); 
+
+            
+            // let text_position = egui::pos2(
+            //     neighbor_node.position.x - text_size.x / 20.0,
+            //     neighbor_node.position.y - neighbor_node.radius - text_size.y
+            // );
+
+            // ui.label(format!("Frame: {}", self.frame_counter));
+            // ui.allocate_space(egui::vec2(0.0, 0.0));
 
 impl MindGraph {
     pub fn go_home_logic(&mut self) {
@@ -219,9 +283,11 @@ impl eframe::App for MindGraph {
             if ui.button("Add Circle").clicked() {
                 self.add_node(); 
                 self.draw_graph(ui, current_time); 
+                self.draw_text_boxes(ui);
             } else {
                 // regular drawing of the graph
                 self.draw_graph(ui, current_time);
+                self.draw_text_boxes(ui);
             }
 
 
@@ -231,7 +297,7 @@ impl eframe::App for MindGraph {
             ctx.input(|input| {
                 if input.pointer.any_pressed() {
                     if let Some(pointer_pos) = input.pointer.interact_pos() {
-                        for node_index in self.graph.node_indices() {
+                        for node_index in self.graph.neighbors(self.current_central_node_index) {
                             let node = &self.graph[node_index];
                             let distance = node.position.distance(pointer_pos);
                             if distance < node.radius {
