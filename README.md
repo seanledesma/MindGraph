@@ -31,3 +31,9 @@ Currently using Trunk to build for web target.
 
 1. color node leading home
 2. when entering new node, put new node on left side, instead of right. Keep placement after adding node the same.
+3. Go home button
+4. figure out cleaner recalculate_node_positions function call in fn draw_node
+5. persistent storage
+
+
+- also fix all references to egui_playground (old name)
