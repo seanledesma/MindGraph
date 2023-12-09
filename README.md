@@ -3,7 +3,7 @@
 MindGraph is a way to map out your thoughts. 
 [Check out a live demo!](http://seanledesma.com/mind_graph/)
 
-![mindgraph-1](https://github.com/seanledesma/MindGraph/assets/87875153/aa49baa9-bd68-4244-8c46-77ce103ed8a1)
+![mind_graph_photo](https://github.com/seanledesma/MindGraph/assets/87875153/ea7155af-8994-47ed-b3b7-0dcec3245419)
 
 
 Have you ever experienced the need to document a pivotal idea, only to realize you lack the proper place to record it? Or maybe you found yourself deeply engrossed in contemplation, arriving at a significant insight, but were unable to recall the path that led you there? Often, our most critical thoughts emerge when we delve deeply into complex subjects, and it can be challenging to capture these insights effectively without understanding the context that guided you to them.
