@@ -1,5 +1,5 @@
 [package]
-name = "egui_playground"
+name = "mind_graph"
 version = "0.1.0"
 authors = ["Sean Ledesma"]
 edition = "2021"

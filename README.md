@@ -1,6 +1,7 @@
 # MindGraph
 
 MindGraph is a way to map out your thoughts. 
+[Check out a live demo!](http://seanledesma.com/mind_graph/)
 
 ![mindgraph-1](https://github.com/seanledesma/MindGraph/assets/87875153/aa49baa9-bd68-4244-8c46-77ce103ed8a1)
 
@@ -9,13 +10,9 @@ Have you ever experienced the need to document a pivotal idea, only to realize y
 
 MindGraph is designed to address this challenge. Utilizing egui, an immediate mode graphical user interface, MindGraph places you at a single node, providing a foundation from which to organize your thoughts. You have the freedom to structure your ideas as you see fit. For instance, you might begin by creating a node labeled 'Hobbies.' From this starting point, the possibilities are endless. You can expand by adding related nodes, such as 'Programming,' and attach specific notes to these nodes. Further branching out, you could create additional nodes named 'C++', 'Rust', 'Python,' each accompanied by its unique set of notes, allowing for a comprehensive and structured exploration of your ideas.
 
-MindGraph's primary objective is to offer a user-friendly interface for adding and selecting nodes with ease. Users can click to select a node, assign it a title, and access notes associated with that node. Navigating the graph swiftly and intuitively is a key aspect of the design. Additionally, the interface includes straightforward mechanisms to return to either the previous node or the home node, ensuring seamless navigation.
+MindGraph's primary objective is to offer a user-friendly interface for adding and selecting nodes with ease. Users can click to select a node, assign it a title, and access notes associated with that node. Navigating the graph swiftly and intuitively is a key aspect of the design. Additionally, the interface includes straightforward mechanisms to return to the previous node, ensuring seamless navigation.
 
-Stretch goals include: having the option to see the entire map of the graph made so far, and showing more than a nodes immediate neighbors.
-
-To date, significant progress has been made on MindGraph's development. Key functionalities implemented include the capability to render a central circle on the screen, add nodes to the graph that are visually represented, and draw edges to connect these nodes. Additionally, I have enabled a feature that allows users to interactively select a node by clicking on it, which then becomes the central focus of the interface. This interactive functionality further extends to adding more nodes to the selected central node.
-
-Currently, navigation can be somewhat confusing, as there are no explicit markers to indicate the origin node from which a user has transitioned. Additionally, there are no options for adding titles or notes to nodes, nor does it provide a direct option to return to the initial or 'home' node. 
+Readme done in collaboration with ChatGPT
 
 
 # Getting Started
@@ -23,8 +20,8 @@ Currently using Trunk to build for web target.
 
 1. Install the required target with rustup target add wasm32-unknown-unknown.
 2. Install Trunk with ```cargo install --locked trunk```.
-3. Run trunk serve to build and serve on http://127.0.0.1:8080. Trunk will rebuild automatically if you edit the project.
-4. Open http://127.0.0.1:8080/index.html#dev in a browser.
+3. Run ```trunk serve``` to build and serve on http://127.0.0.1:8080. Trunk will rebuild automatically if you edit the project.
+4. Open http://localhost:8080/index.html#dev in a browser.
 
 
 # Stretch Goals
@@ -32,8 +29,4 @@ Currently using Trunk to build for web target.
 1. color node leading home
 2. when entering new node, put new node on left side, instead of right. Keep placement after adding node the same.
 3. Go home button
-4. figure out cleaner recalculate_node_positions function call in fn draw_node
-5. persistent storage
-
-
-- also fix all references to egui_playground (old name)
+4. persistent note storage
