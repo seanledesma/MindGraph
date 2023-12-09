@@ -18,7 +18,7 @@ Readme done in collaboration with ChatGPT
 # Getting Started
 Currently using Trunk to build for web target.
 
-1. Install the required target with rustup target add wasm32-unknown-unknown.
+1. Install the required target with ```rustup target add wasm32-unknown-unknown```.
 2. Install Trunk with ```cargo install --locked trunk```.
 3. Run ```trunk serve``` to build and serve on http://127.0.0.1:8080. Trunk will rebuild automatically if you edit the project.
 4. Open http://localhost:8080/index.html#dev in a browser.
