@@ -1,3 +1,4 @@
+use eframe::egui::Visuals;
 use petgraph::graph::NodeIndex;
 use petgraph::graph::UnGraph;
 use petgraph::visit::EdgeRef;
@@ -318,6 +319,9 @@ impl eframe::App for MindGraph {
     /// - Detecting mouse clicks on neighboring nodes to change the central node.
     ///
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        // set egui to ensure dark mode
+        ctx.set_visuals(Visuals::dark());
+
         egui::CentralPanel::default().show(ctx, |ui| {
             // title
             ui.with_layout(egui::Layout::top_down(egui::Align::Center), |ui| {
